@@ -14,7 +14,7 @@ public class AppDialog extends JFrame {
     private final Launcher launcher;
 
     public AppDialog(Launcher launcher, String text1, String text2) {
-        super("Minecraft URL Launcher");
+        super("McURL");
         this.launcher = launcher;
 
         content = new JPanel();

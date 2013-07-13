@@ -35,19 +35,22 @@ public class Launcher {
 
     public void startLauncher() {
         System.out.println("Starting launcher.");
+        JFrame frame = createFrame();
         try {
             Class<?> aClass = new URLClassLoader(new URL[]{launcherJar.toURI().toURL()}).loadClass("net.minecraft.launcher.Launcher");
             Constructor constructor = aClass.getConstructor(new Class[]{JFrame.class, File.class, Proxy.class, PasswordAuthentication.class, String[].class, Integer.class});
-            constructor.newInstance(createFrame(), minecraftDir, Proxy.NO_PROXY, null, arguments, BOOTSTRAP_VERSION);
+            constructor.newInstance(frame, minecraftDir, Proxy.NO_PROXY, null, arguments, BOOTSTRAP_VERSION);
+            frame.setLocationRelativeTo(null); // The frame resizes itself, so we move it to the middle again
         } catch (Exception e) {
-            throw new RuntimeException("Launcher start failed", e);
+            e.printStackTrace();
+            frame.setVisible(false);
+            new AppDialog(null, "Error starting launcher", e.toString());
         }
     }
 
     private JFrame createFrame() {
         JFrame frame = new JFrame("Minecraft Launcher (via McURL)");
         frame.setSize(854, 480);
-        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
         return frame;

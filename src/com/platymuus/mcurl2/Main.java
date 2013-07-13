@@ -17,13 +17,12 @@ public class Main {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
-            new AppDialog(null, "Failed to set look and feel", e.toString());
-            return;
+            e.printStackTrace();
         }
 
         // argument size handling
         if (args.length == 0) {
-            new AppDialog(null, "No server specified", "Install McURL and follow links to play");
+            new AppDialog(null, "No server specified", "Install McURL and follow links to play.");
             return;
         }
         if (args.length > 1) {
@@ -40,12 +39,13 @@ public class Main {
         try {
             Launcher launcher = new Launcher(new String[]{"--server", host, "--port", port});
             if (!launcher.exists()) {
-                new AppDialog(null, "Launcher not found", "Have you played Minecraft before?");
+                new AppDialog(null, "Launcher not found", "Run the normal Minecraft launcher at least once.");
             } else {
-                new AppDialog(launcher, host + ":" + port, "Choose a profile with the Minecraft launcher.");
+                new AppDialog(launcher, host + (port.equals("25565") ? "" : ":" + port), "Choose a profile with the Minecraft launcher.");
             }
-        } catch (Exception ex) {
-            new AppDialog(null, "An unexpected error occurred", ex.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+            new AppDialog(null, "An unexpected error occurred", e.toString());
         }
     }
 
