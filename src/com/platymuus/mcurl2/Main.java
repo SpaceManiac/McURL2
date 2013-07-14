@@ -2,6 +2,7 @@ package com.platymuus.mcurl2;
 
 import javax.swing.*;
 import java.net.MalformedURLException;
+import java.util.Scanner;
 
 /**
  * The main class for McURL.
@@ -22,7 +23,16 @@ public class Main {
 
         // argument size handling
         if (args.length == 0) {
-            new AppDialog(null, "No server specified", "Install McURL and follow links to play.");
+            if (System.getenv("MCURL_WINDOWS") != null) {
+                try {
+                    windowsInstall();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    new AppDialog(null, "Unexpected installation error", e.toString());
+                }
+            } else {
+                new AppDialog(null, "No server specified", "Install McURL and follow links to play.");
+            }
             return;
         }
         if (args.length > 1) {
@@ -79,6 +89,61 @@ public class Main {
             host = text;
             port = "25565";
         }
+    }
+
+    private static void windowsInstall() throws Exception {
+        // called when environment variable MCURL_WINDOWS is set
+        // job is to install McURL to the Windows registry
+        System.out.println("Performing Windows installation");
+
+        String exe = Main.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
+        if (exe.startsWith("/")) {
+            exe = exe.substring(1);
+        }
+        if (!exe.endsWith(".exe")) {
+            new AppDialog(null, "Installation failed", "You must install from a .exe file.");
+            return;
+        }
+        exe = exe.replace("/", "\\");
+        System.out.println("This file: " + exe);
+
+        String root = "HKCR\\minecraft";
+        String values[][] = {
+                {root, "", "Minecraft Server (McURL) protocol"},
+                {root, "URL Protocol", ""},
+                {root + "\\DefaultIcon", "", exe + ",0"},
+                {root + "\\shell", "", "open"},
+                {root + "\\shell\\open", "", ""},
+                {root + "\\shell\\open\\command", "", exe + " %1"}
+        };
+
+        Runtime rt = Runtime.getRuntime();
+        for (String[] entry : values) {
+            String key = entry[0];
+            String value = entry[1];
+            String data = entry[2];
+            String cmd = "REG ADD " + key + " /f /v \"" + value + "\" /d \"" + data + "\"";
+            System.out.println(cmd);
+
+            Process p = rt.exec(cmd);
+            Scanner err = new Scanner(p.getErrorStream());
+            int result = p.waitFor();
+
+            String errorLine = "";
+            if (err.hasNextLine()) {
+                errorLine = err.nextLine();
+            }
+
+            if (errorLine.contains("Access is denied")) {
+                new AppDialog(null, "Installation failed", "You must run as administrator to install.");
+                return;
+            } else if (result != 0) {
+                new AppDialog(null, "Installation failed", "Registry error: " + errorLine);
+                return;
+            }
+        }
+
+        new AppDialog(null, "Installation succeeded", "Follow minecraft links to play.");
     }
 
 }
